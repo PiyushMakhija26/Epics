@@ -23,8 +23,8 @@ async function safeFetch(method, url, body = null, token = null) {
   console.log('health', health.status);
   log.push({ step: 'health', result: health });
 
-  console.log('=== SEED DEFAULTS ===');
-  const seed = await safeFetch('POST', `${base}/api/auth/seed-defaults`);
+  console.log('=== SEED DEFAULTS (force=true) ===');
+  const seed = await safeFetch('POST', `${base}/api/auth/seed-defaults?force=true`);
   console.log('seed', seed.status, seed.body);
   log.push({ step: 'seed-defaults', result: seed });
 

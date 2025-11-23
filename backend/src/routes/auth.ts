@@ -406,6 +406,8 @@ router.post('/seed-defaults', async (req: any, res: Response): Promise<void> => 
       return void res.status(403).json({ error: 'Seeding not allowed in production' });
     }
 
+    const force = req.query.force === 'true';
+
     // Ensure departments exist
     let departments = await Department.find({});
     if (departments.length === 0) {
@@ -420,10 +422,16 @@ router.post('/seed-defaults', async (req: any, res: Response): Promise<void> => 
       departments = await Department.insertMany(defaultDepts);
     }
 
-    // Avoid duplicate seeding if profiles already exist
+    // Avoid duplicate seeding if profiles already exist (unless force=true)
     const existingCount = await Profile.countDocuments({});
-    if (existingCount > 0) {
+    if (existingCount > 0 && !force) {
       return void res.status(200).json({ message: 'Profiles already exist, skipping seeding', existingCount });
+    }
+
+    // If force=true and profiles exist, delete them first
+    if (force && existingCount > 0) {
+      await Profile.deleteMany({});
+      console.log(`[SEED] Force-seeding: deleted ${existingCount} existing profiles`);
     }
 
     const defaultPassword = 'Password123!';
