@@ -47,7 +47,7 @@ router.post('/signup', async (req: any, res: Response): Promise<void> => {
 
     // Generate JWT token
     const token = jwt.sign(
-      { sub: userId, email, role },
+      { sub: userId, email, user_type: role },
       process.env.JWT_SECRET || 'your-secret-key',
       { expiresIn: '7d' }
     );
@@ -94,7 +94,7 @@ router.post('/login', async (req: any, res: Response): Promise<void> => {
 
     // Generate JWT token
     const token = jwt.sign(
-      { sub: user.user_id, email: user.email, role: user.user_type },
+      { sub: user.user_id, email: user.email, user_type: user.user_type },
       process.env.JWT_SECRET || 'your-secret-key',
       { expiresIn: '7d' }
     );

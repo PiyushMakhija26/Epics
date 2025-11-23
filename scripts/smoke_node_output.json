@@ -1,0 +1,42 @@
+[
+  {
+    "step": "health",
+    "result": {
+      "ok": false,
+      "status": 0,
+      "body": "fetch failed"
+    }
+  },
+  {
+    "step": "seed-defaults",
+    "result": {
+      "ok": false,
+      "status": 0,
+      "body": "fetch failed"
+    }
+  },
+  {
+    "step": "user-login",
+    "result": {
+      "ok": false,
+      "status": 0,
+      "body": "fetch failed"
+    }
+  },
+  {
+    "step": "create-request",
+    "result": {
+      "ok": false,
+      "status": 0,
+      "body": "fetch failed"
+    }
+  },
+  {
+    "step": "admin-login",
+    "result": {
+      "ok": false,
+      "status": 0,
+      "body": "fetch failed"
+    }
+  }
+]
