@@ -2,41 +2,196 @@
   {
     "step": "health",
     "result": {
-      "ok": false,
-      "status": 0,
-      "body": "fetch failed"
+      "ok": true,
+      "status": 200,
+      "body": {
+        "status": "ok",
+        "timestamp": "2025-11-23T21:09:03.422Z"
+      }
     }
   },
   {
     "step": "seed-defaults",
     "result": {
-      "ok": false,
-      "status": 0,
-      "body": "fetch failed"
+      "ok": true,
+      "status": 201,
+      "body": {
+        "message": "Default users and admins seeded",
+        "count": 20,
+        "note": "default password: Password123!"
+      }
     }
   },
   {
     "step": "user-login",
     "result": {
-      "ok": false,
-      "status": 0,
-      "body": "fetch failed"
+      "ok": true,
+      "status": 200,
+      "body": {
+        "message": "Login successful",
+        "user": {
+          "user_id": "ce810eec-a3ba-426d-aaa3-42c2b34ce615",
+          "email": "user1@example.com",
+          "full_name": "User 1",
+          "user_type": "user"
+        },
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJjZTgxMGVlYy1hM2JhLTQyNmQtYWFhMy00MmMyYjM0Y2U2MTUiLCJlbWFpbCI6InVzZXIxQGV4YW1wbGUuY29tIiwidXNlcl90eXBlIjoidXNlciIsImlhdCI6MTc2MzkzMjE0MywiZXhwIjoxNzY0NTM2OTQzfQ.TE_LOdZJIY3fmHmO7rEAXTXc9EBemgOgsydPxO_PQ6U"
+      }
     }
   },
   {
     "step": "create-request",
     "result": {
-      "ok": false,
-      "status": 0,
-      "body": "fetch failed"
+      "ok": true,
+      "status": 201,
+      "body": {
+        "id": "57381c37-761c-487f-aec4-3a10a5a65999",
+        "user_id": "ce810eec-a3ba-426d-aaa3-42c2b34ce615",
+        "title": "Smoke Test Request",
+        "description": "Created by smoke script",
+        "category": "General",
+        "location": "Electricity",
+        "status": "raised",
+        "priority": "medium",
+        "editable_by_user": false,
+        "attachments": [],
+        "_id": "692377ef1dd4a199d403365d",
+        "created_at": "2025-11-23T21:09:03.746Z",
+        "updated_at": "2025-11-23T21:09:03.746Z",
+        "__v": 0
+      }
     }
   },
   {
     "step": "admin-login",
     "result": {
-      "ok": false,
-      "status": 0,
-      "body": "fetch failed"
+      "ok": true,
+      "status": 200,
+      "body": {
+        "message": "Login successful",
+        "user": {
+          "user_id": "f137a935-8e14-43ba-808c-b0ffa6585d44",
+          "email": "admin1@example.com",
+          "full_name": "Admin 1",
+          "user_type": "admin"
+        },
+        "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJmMTM3YTkzNS04ZTE0LTQzYmEtODA4Yy1iMGZmYTY1ODVkNDQiLCJlbWFpbCI6ImFkbWluMUBleGFtcGxlLmNvbSIsInVzZXJfdHlwZSI6ImFkbWluIiwiaWF0IjoxNzYzOTMyMTQzLCJleHAiOjE3NjQ1MzY5NDN9.2uFakRJEJE5KCHiU1I9bofMkij_NkpntQ0soIplxmGc"
+      }
+    }
+  },
+  {
+    "step": "admin-set-in_progress",
+    "result": {
+      "ok": true,
+      "status": 200,
+      "body": {
+        "data": {
+          "_id": "692377ef1dd4a199d403365d",
+          "id": "57381c37-761c-487f-aec4-3a10a5a65999",
+          "user_id": "ce810eec-a3ba-426d-aaa3-42c2b34ce615",
+          "title": "Smoke Test Request",
+          "description": "Created by smoke script",
+          "category": "General",
+          "location": "Electricity",
+          "status": "in_progress",
+          "priority": "medium",
+          "editable_by_user": false,
+          "attachments": [],
+          "created_at": "2025-11-23T21:09:03.746Z",
+          "updated_at": "2025-11-23T21:09:03.890Z",
+          "__v": 0
+        },
+        "message": "Status updated successfully"
+      }
+    }
+  },
+  {
+    "step": "admin-set-completed",
+    "result": {
+      "ok": true,
+      "status": 200,
+      "body": {
+        "data": {
+          "_id": "692377ef1dd4a199d403365d",
+          "id": "57381c37-761c-487f-aec4-3a10a5a65999",
+          "user_id": "ce810eec-a3ba-426d-aaa3-42c2b34ce615",
+          "title": "Smoke Test Request",
+          "description": "Created by smoke script",
+          "category": "General",
+          "location": "Electricity",
+          "status": "completed",
+          "priority": "medium",
+          "editable_by_user": false,
+          "attachments": [],
+          "created_at": "2025-11-23T21:09:03.746Z",
+          "updated_at": "2025-11-23T21:09:06.120Z",
+          "__v": 0
+        },
+        "message": "Status updated successfully"
+      }
+    }
+  },
+  {
+    "step": "user-rate",
+    "result": {
+      "ok": true,
+      "status": 201,
+      "body": {
+        "message": "Rating submitted successfully",
+        "data": {
+          "_id": "692377f527702b419dae45a4",
+          "user_id": "ce810eec-a3ba-426d-aaa3-42c2b34ce615",
+          "request_id": "57381c37-761c-487f-aec4-3a10a5a65999",
+          "__v": 0,
+          "comments": "Great work",
+          "created_at": "2025-11-23T21:09:09.081Z",
+          "rating": "excellent",
+          "updatedAt": "2025-11-23T21:09:09.081Z"
+        }
+      }
+    }
+  },
+  {
+    "step": "user-request-change",
+    "result": {
+      "ok": true,
+      "status": 201,
+      "body": {
+        "message": "Change request submitted",
+        "data": {
+          "id": "5fafb0ff-237f-4c17-8b26-710c2d9e4351",
+          "request_id": "57381c37-761c-487f-aec4-3a10a5a65999",
+          "user_id": "ce810eec-a3ba-426d-aaa3-42c2b34ce615",
+          "message": "Please update the details to include location specifics.",
+          "status": "pending",
+          "_id": "692377f51dd4a199d403366d",
+          "created_at": "2025-11-23T21:09:09.093Z",
+          "updated_at": "2025-11-23T21:09:09.093Z",
+          "__v": 0
+        }
+      }
+    }
+  },
+  {
+    "step": "admin-approve-change",
+    "result": {
+      "ok": true,
+      "status": 200,
+      "body": {
+        "message": "Change request approved",
+        "data": {
+          "_id": "692377f51dd4a199d403366d",
+          "id": "5fafb0ff-237f-4c17-8b26-710c2d9e4351",
+          "request_id": "57381c37-761c-487f-aec4-3a10a5a65999",
+          "user_id": "ce810eec-a3ba-426d-aaa3-42c2b34ce615",
+          "message": "Please update the details to include location specifics.",
+          "status": "approved",
+          "created_at": "2025-11-23T21:09:09.093Z",
+          "updated_at": "2025-11-23T21:09:09.103Z",
+          "__v": 0,
+          "admin_response": "Approved for edit"
+        }
+      }
     }
   }
 ]
