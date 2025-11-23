@@ -2,7 +2,11 @@ const fs = require('fs');
 const base = 'http://localhost:3001';
 const outFile = 'c:\\Users\\piyu4\\OneDrive\\Desktop\\Epics\\scripts\\smoke_node_output.json';
 
-async function safeFetch(method, url, body = null, token = null) {
+async function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function safeFetch(method, url, body = null, token = null, retries = 3) {
   try {
     const headers = { 'Content-Type': 'application/json' };
     if (token) headers['Authorization'] = `Bearer ${token}`;
@@ -12,6 +16,10 @@ async function safeFetch(method, url, body = null, token = null) {
     try { json = text ? JSON.parse(text) : null } catch (e) { json = text }
     return { ok: res.ok, status: res.status, body: json };
   } catch (err) {
+    if (retries > 0 && err.message.includes('ECONNREFUSED')) {
+      await sleep(2000);
+      return safeFetch(method, url, body, token, retries - 1);
+    }
     return { ok: false, status: 0, body: err.message };
   }
 }
