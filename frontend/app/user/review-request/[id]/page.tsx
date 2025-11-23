@@ -46,7 +46,7 @@ export default function ReviewRequestPage() {
 
   const fetchRequest = async () => {
     try {
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem('token');
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/requests/${requestId}`,
         {
@@ -89,7 +89,7 @@ export default function ReviewRequestPage() {
         return 'bg-yellow-100 text-yellow-800';
       case 'completed':
         return 'bg-green-100 text-green-800';
-      case 'needs_clarification':
+      case 'clarification':
         return 'bg-orange-100 text-orange-800';
       case 'closed':
         return 'bg-gray-100 text-gray-800';
@@ -184,7 +184,7 @@ export default function ReviewRequestPage() {
               </div>
               <div>
                 <h3 className="font-semibold text-sm text-gray-600">Department</h3>
-                <p className="text-gray-700">{request.department || 'N/A'}</p>
+                <p className="text-gray-700">{(request as any).location || request.department || 'N/A'}</p>
               </div>
             </div>
 
@@ -259,17 +259,49 @@ export default function ReviewRequestPage() {
           />
         )}
 
-        {/* Re-open Request Button */}
+        {/* Re-open Request Button and Request Change */}
         {request.status === 'completed' && (
           <div className="flex gap-2">
             <Button
               variant="outline"
-              onClick={() => {
-                // Handle re-opening request
-                alert('Contact support to reopen this request');
+              onClick={async () => {
+                const token = localStorage.getItem('token');
+                try {
+                  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/requests/${requestId}/reopen`, { method: 'POST', headers: { Authorization: `Bearer ${token}` } });
+                  if (!res.ok) {
+                    const err = await res.json().catch(() => null);
+                    alert(err?.error || 'Failed to reopen request');
+                    return;
+                  }
+                  alert('Request reopened successfully');
+                  fetchRequest();
+                } catch (err) {
+                  alert('Failed to reopen request');
+                }
               }}
             >
               Need to Re-open This Request?
+            </Button>
+
+            <Button
+              onClick={async () => {
+                const message = prompt('Describe the change you want to request:');
+                if (!message) return;
+                const token = localStorage.getItem('token');
+                try {
+                  const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/requests/${requestId}/request-change`, { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }, body: JSON.stringify({ message }) });
+                  if (!res.ok) {
+                    const err = await res.json().catch(() => null);
+                    alert(err?.error || 'Failed to submit change request');
+                    return;
+                  }
+                  alert('Change request submitted. Admin will review it.');
+                } catch (err) {
+                  alert('Failed to submit change request');
+                }
+              }}
+            >
+              Request Change
             </Button>
           </div>
         )}

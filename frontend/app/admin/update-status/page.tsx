@@ -37,7 +37,7 @@ export default function UpdateStatusPage() {
 
   const fetchRequests = async () => {
     try {
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem('token');
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/requests`,
         {
@@ -69,7 +69,7 @@ export default function UpdateStatusPage() {
     setError('');
 
     try {
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem('token');
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/requests/${selectedRequestId}/status`,
         {
@@ -114,7 +114,7 @@ export default function UpdateStatusPage() {
       case 'completed': return 'bg-green-100 text-green-800';
       case 'in_progress': return 'bg-orange-100 text-orange-800';
       case 'raised': return 'bg-blue-100 text-blue-800';
-      case 'needs_clarification': return 'bg-yellow-100 text-yellow-800';
+      case 'clarification': return 'bg-yellow-100 text-yellow-800';
       case 'closed': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
     }
@@ -221,7 +221,7 @@ export default function UpdateStatusPage() {
                       <SelectContent>
                         <SelectItem value="raised">Raised</SelectItem>
                         <SelectItem value="in_progress">In Progress</SelectItem>
-                        <SelectItem value="needs_clarification">Needs Clarification</SelectItem>
+                        <SelectItem value="clarification">Needs Clarification</SelectItem>
                         <SelectItem value="completed">Completed</SelectItem>
                         <SelectItem value="closed">Closed</SelectItem>
                       </SelectContent>

@@ -2,7 +2,7 @@ import { Router, Response } from 'express';
 import { AuthRequest, authMiddleware, adminOnly } from '../middleware/auth';
 import { sendStatusUpdateEmail } from '../utils/email';
 import { adminWorkAssignmentService } from '../services/adminWorkAssignment';
-import { ServiceRequest, StatusHistory, RequestRating, Profile } from '../db/models';
+import { ServiceRequest, StatusHistory, RequestRating, Profile, ChangeRequest } from '../db/models';
 import { v4 as uuidv4 } from 'uuid';
 
 const router = Router();
@@ -85,7 +85,7 @@ router.put('/:requestId/status', authMiddleware, adminOnly, async (req: any, res
     const { status, message, requiresUserFeedback } = req.body;
     const adminId = req.user?.sub;
 
-    const validStatuses = ['raised', 'assigned', 'in_progress', 'completed', 'closed'];
+    const validStatuses = ['raised', 'assigned', 'in_progress', 'completed', 'closed', 'clarification'];
     if (!validStatuses.includes(status)) {
       res.status(400).json({ error: 'Invalid status' });
       return;
@@ -133,6 +133,125 @@ router.put('/:requestId/status', authMiddleware, adminOnly, async (req: any, res
     });
   } catch (error) {
     console.error('Status update error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Allow a user to edit their request if admin granted edit rights or if the request is still 'raised'
+router.put('/:requestId', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { requestId } = req.params;
+    const userId = req.user?.sub;
+
+    const request = await ServiceRequest.findOne({ id: requestId });
+    if (!request) return void res.status(404).json({ error: 'Request not found' });
+    if (request.user_id !== userId) return void res.status(403).json({ error: 'Unauthorized' });
+
+    if (!request.editable_by_user && request.status !== 'raised') {
+      return void res.status(400).json({ error: 'Request not editable at this time' });
+    }
+
+    const { title, description, category, location, attachments } = req.body;
+
+    const updated = await ServiceRequest.findOneAndUpdate(
+      { id: requestId },
+      { title: title || request.title, description: description || request.description, category: category || request.category, location: location || request.location, attachments: attachments || request.attachments, editable_by_user: false, updated_at: new Date() },
+      { new: true }
+    );
+
+    await StatusHistory.create({ request_id: requestId, old_status: request.status, new_status: request.status, changed_by: userId, reason: 'User edited request' });
+
+    res.json({ message: 'Request updated successfully', data: updated });
+  } catch (error) {
+    console.error('Edit request error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// User can reopen a completed/closed request
+router.post('/:requestId/reopen', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { requestId } = req.params;
+    const userId = req.user?.sub;
+
+    const request = await ServiceRequest.findOne({ id: requestId, user_id: userId });
+    if (!request) return void res.status(404).json({ error: 'Request not found or unauthorized' });
+
+    if (!['completed','closed'].includes(request.status)) {
+      return void res.status(400).json({ error: 'Only completed or closed requests can be reopened' });
+    }
+
+    await ServiceRequest.updateOne({ id: requestId }, { status: 'raised', updated_at: new Date() });
+    await StatusHistory.create({ request_id: requestId, old_status: request.status, new_status: 'raised', changed_by: userId, reason: 'User reopened request' });
+
+    res.json({ message: 'Request reopened successfully' });
+  } catch (error) {
+    console.error('Reopen error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// User requests changes to a request (creates a ChangeRequest)
+router.post('/:requestId/request-change', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
+  try {
+    const { requestId } = req.params;
+    const userId = req.user?.sub;
+    const { message } = req.body;
+
+    if (!message) return void res.status(400).json({ error: 'Change message is required' });
+
+    const request = await ServiceRequest.findOne({ id: requestId, user_id: userId });
+    if (!request) return void res.status(404).json({ error: 'Request not found or unauthorized' });
+
+    const change = await ChangeRequest.create({ id: uuidv4(), request_id: requestId, user_id: userId!, message, status: 'pending' });
+
+    res.status(201).json({ message: 'Change request submitted', data: change });
+  } catch (error) {
+    console.error('Change request error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Admin approves/rejects a change request and can grant edit rights when approving
+router.post('/:requestId/change/:changeId/approve', authMiddleware, adminOnly, async (req: any, res: Response): Promise<void> => {
+  try {
+    const { requestId, changeId } = req.params;
+    const { approve, adminResponse } = req.body;
+    const adminId = req.user?.sub;
+
+    const change = await ChangeRequest.findOne({ id: changeId, request_id: requestId });
+    if (!change) return void res.status(404).json({ error: 'Change request not found' });
+
+    change.status = approve ? 'approved' : 'rejected';
+    change.admin_response = adminResponse || '';
+    await change.save();
+
+    if (approve) {
+      // Grant the user edit rights for the request
+      await ServiceRequest.updateOne({ id: requestId }, { editable_by_user: true });
+    }
+
+    await StatusHistory.create({ request_id: requestId, old_status: '', new_status: '', changed_by: adminId, reason: `Change request ${approve ? 'approved' : 'rejected'}` });
+
+    res.json({ message: `Change request ${approve ? 'approved' : 'rejected'}`, data: change });
+  } catch (error) {
+    console.error('Approve change error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Admin can directly grant edit rights
+router.post('/:requestId/grant-edit', authMiddleware, adminOnly, async (req: any, res: Response): Promise<void> => {
+  try {
+    const { requestId } = req.params;
+    const { durationHours } = req.body; // optional
+
+    const update: any = { editable_by_user: true };
+    await ServiceRequest.updateOne({ id: requestId }, update);
+
+    res.json({ message: 'Edit rights granted to user for the request' });
+  } catch (error) {
+    console.error('Grant edit error:', error);
     res.status(500).json({ error: 'Internal server error' });
   }
 });

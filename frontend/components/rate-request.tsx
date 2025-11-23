@@ -14,7 +14,7 @@ interface RateRequestProps {
 }
 
 export function RateRequest({ requestId, onRatingSubmitted }: RateRequestProps) {
-  const [rating, setRating] = useState<'excellent' | 'good' | 'bad' | null>(null);
+  const [rating, setRating] = useState<'excellent' | 'good' | 'open_again' | null>(null);
   const [comments, setComments] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -32,7 +32,7 @@ export function RateRequest({ requestId, onRatingSubmitted }: RateRequestProps) 
     setError('');
 
     try {
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem('token');
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/requests/${requestId}/rate`,
         {
@@ -105,7 +105,7 @@ export function RateRequest({ requestId, onRatingSubmitted }: RateRequestProps) 
               {[
                 { value: 'excellent' as const, label: 'Excellent', icon: '⭐⭐⭐' },
                 { value: 'good' as const, label: 'Good', icon: '⭐⭐' },
-                { value: 'bad' as const, label: 'Needs Improvement', icon: '⭐' },
+                { value: 'open_again' as const, label: 'Needs Improvement / Reopen', icon: '⭐' },
               ].map((option) => (
                 <label
                   key={option.value}

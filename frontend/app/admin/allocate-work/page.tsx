@@ -43,7 +43,7 @@ export default function AllocateWorkPage() {
 
   const fetchData = async () => {
     try {
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem('token');
 
       // Fetch requests
       const requestsResponse = await fetch(
@@ -61,12 +61,21 @@ export default function AllocateWorkPage() {
         ));
       }
 
-      // Fetch other admins (in a real app, you'd have an endpoint for this)
-      // For now, we'll use a placeholder
-      setAdmins([
-        { id: '1', full_name: 'John Doe', email: 'john@example.com' },
-        { id: '2', full_name: 'Jane Smith', email: 'jane@example.com' },
-      ]);
+      // Fetch admin list from backend
+      try {
+        const adminsRes = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/admin/admins`, { headers: { Authorization: `Bearer ${token}` } });
+        if (adminsRes.ok) {
+          const adata = await adminsRes.json();
+          setAdmins(adata.data || []);
+        } else {
+          // fallback placeholder
+          setAdmins([
+            { id: '1', full_name: 'John Doe', email: 'john@example.com' },
+          ]);
+        }
+      } catch (err) {
+        setAdmins([{ id: '1', full_name: 'John Doe', email: 'john@example.com' }]);
+      }
     } catch (err) {
       setError('Failed to load data');
     } finally {
@@ -86,7 +95,7 @@ export default function AllocateWorkPage() {
     setError('');
 
     try {
-      const token = localStorage.getItem('authToken');
+      const token = localStorage.getItem('token');
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_API_URL}/api/requests/${selectedRequestId}/allocate`,
         {

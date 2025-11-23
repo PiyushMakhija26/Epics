@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useState, Suspense, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -10,15 +10,22 @@ import { Label } from '@/components/ui/label';
 import { SecurityQuestionsSetup } from '@/components/security-questions-setup';
 import INDIA_LOCATIONS from '@/lib/indiaLocations';
 import Chatbot from '@/components/chatbot';
-import { useEffect } from 'react';
 
 function SignupContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const initialRole = (searchParams.get('role') as 'user' | 'admin') || 'user';
+  const [role, setRole] = useState<'user' | 'admin'>('user');
+  const [step, setStep] = useState<'role' | 'auth' | 'profile' | 'security'>('role');
 
-  const [role, setRole] = useState<'user' | 'admin'>(initialRole);
-  const [step, setStep] = useState<'role' | 'auth' | 'profile' | 'security'>(initialRole ? 'auth' : 'role');
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+      const initialRole = (params.get('role') as 'user' | 'admin') || 'user';
+      setRole(initialRole);
+      setStep(initialRole ? 'auth' : 'role');
+    } catch (err) {
+      // silently ignore
+    }
+  }, []);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [repeatPassword, setRepeatPassword] = useState('');

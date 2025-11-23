@@ -399,4 +399,75 @@ router.post('/departments/seed', async (req: any, res: Response): Promise<void> 
   }
 });
 
+// Seed default users and admins (dev only)
+router.post('/seed-defaults', async (req: any, res: Response): Promise<void> => {
+  try {
+    if (process.env.NODE_ENV === 'production') {
+      return void res.status(403).json({ error: 'Seeding not allowed in production' });
+    }
+
+    // Ensure departments exist
+    let departments = await Department.find({});
+    if (departments.length === 0) {
+      const defaultDepts = [
+        { name: 'Electricity', description: 'Electricity and power related issues' },
+        { name: 'Water', description: 'Water supply and distribution issues' },
+        { name: 'Sanitation', description: 'Sanitation and waste management' },
+        { name: 'Medical', description: 'Medical and healthcare services' },
+        { name: 'Services', description: 'General civic services' },
+        { name: 'Others', description: 'Other miscellaneous issues' },
+      ];
+      departments = await Department.insertMany(defaultDepts);
+    }
+
+    // Avoid duplicate seeding if profiles already exist
+    const existingCount = await Profile.countDocuments({});
+    if (existingCount > 0) {
+      return void res.status(200).json({ message: 'Profiles already exist, skipping seeding', existingCount });
+    }
+
+    const defaultPassword = 'Password123!';
+    const hashed = await bcrypt.hash(defaultPassword, 10);
+
+    const usersToCreate: any[] = [];
+    const adminsToCreate: any[] = [];
+
+    // Create 10 users
+    for (let i = 1; i <= 10; i++) {
+      const uid = uuidv4();
+      usersToCreate.push({
+        user_id: uid,
+        email: `user${i}@example.com`,
+        password: hashed,
+        full_name: `User ${i}`,
+        user_type: 'user',
+        address: `Address ${i}`,
+        city: 'DemoCity',
+        state: 'DemoState',
+      });
+    }
+
+    // Create 10 admins and assign departments round-robin
+    for (let i = 1; i <= 10; i++) {
+      const aid = uuidv4();
+      const dept = departments[(i - 1) % departments.length];
+      adminsToCreate.push({
+        user_id: aid,
+        email: `admin${i}@example.com`,
+        password: hashed,
+        full_name: `Admin ${i}`,
+        user_type: 'admin',
+        department: dept.name,
+      });
+    }
+
+    const createdUsers = await Profile.insertMany([...usersToCreate, ...adminsToCreate]);
+
+    res.status(201).json({ message: 'Default users and admins seeded', count: createdUsers.length, note: `default password: ${defaultPassword}` });
+  } catch (error) {
+    console.error('Seeding error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 export default router;

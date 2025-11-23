@@ -8,8 +8,8 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { createClient } from '@/lib/supabase/client';
-
+// Using backend API instead of Supabase for requests
+ 
 const DEPARTMENTS = ['Electricity', 'Water', 'Agriculture', 'Law', 'Medical', 'Services'];
 
 export default function RaiseRequestPage() {
@@ -27,9 +27,10 @@ export default function RaiseRequestPage() {
   useEffect(() => {
     const loadDepartments = async () => {
       try {
-        const supabase = createClient();
-        const { data } = await supabase.from('departments').select('*');
-        if (data) setDepartments(data);
+        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/departments`);
+        if (!res.ok) throw new Error('Failed to load departments');
+        const data = await res.json();
+        setDepartments(data);
       } catch (error) {
         console.error('Error loading departments:', error);
       }
@@ -72,54 +73,22 @@ export default function RaiseRequestPage() {
 
     setLoading(true);
     try {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-
-      if (!user) {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      if (!token) {
         setError('Not authenticated');
         setLoading(false);
         return;
       }
 
-      const { data: request, error: requestError } = await supabase
-        .from('service_requests')
-        .insert({
-          user_id: user.id,
-          title: formData.title,
-          description: formData.description,
-          department_id: formData.department,
-          status: 'raised',
-          priority: 'medium',
-        })
-        .select()
-        .single();
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/requests`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ title: formData.title, description: formData.description, department: formData.department, priority: 'medium' }),
+      });
 
-      if (requestError) throw requestError;
-
-      if (images.length > 0 && request) {
-        for (const image of images) {
-          const fileExt = image.name.split('.').pop();
-          const fileName = `${request.id}/${Date.now()}.${fileExt}`;
-
-          const { error: uploadError } = await supabase.storage
-            .from('request-images')
-            .upload(fileName, image);
-
-          if (uploadError) {
-            console.error('Image upload error:', uploadError);
-          } else {
-            const { data: urlData } = supabase.storage
-              .from('request-images')
-              .getPublicUrl(fileName);
-
-            await supabase
-              .from('request_images')
-              .insert({
-                request_id: request.id,
-                image_url: urlData.publicUrl,
-              });
-          }
-        }
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || 'Failed to submit request');
       }
 
       router.push('/user/dashboard');

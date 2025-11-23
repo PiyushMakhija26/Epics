@@ -1,6 +1,7 @@
 import { Router, Response, Request } from 'express';
 import { AuthRequest, authMiddleware, adminOnly } from '../middleware/auth';
 import { adminWorkAssignmentService } from '../services/adminWorkAssignment';
+import { ChangeRequest, Profile } from '../db/models';
 
 const router = Router();
 
@@ -73,4 +74,26 @@ router.put('/assignments/:assignmentId/status', authMiddleware, adminOnly, async
 });
 
 export default router;
+
+// Admin: list change requests
+router.get('/change-requests', authMiddleware, adminOnly, async (req: any, res: Response): Promise<void> => {
+  try {
+    const changeRequests = await ChangeRequest.find({}).sort({ created_at: -1 });
+    res.json({ data: changeRequests });
+  } catch (error) {
+    console.error('Error fetching change requests:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Admin: list admins (for allocation) - returns basic profile info
+router.get('/admins', authMiddleware, adminOnly, async (req: any, res: Response): Promise<void> => {
+  try {
+    const admins = await Profile.find({ user_type: 'admin' }).select('user_id full_name email department').lean();
+    res.json({ data: admins });
+  } catch (error) {
+    console.error('Error fetching admins:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 

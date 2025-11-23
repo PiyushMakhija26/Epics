@@ -47,6 +47,7 @@ export interface IServiceRequest extends Document {
   status: 'raised' | 'assigned' | 'in_progress' | 'completed' | 'closed';
   priority: 'low' | 'medium' | 'high' | 'critical';
   assigned_to?: string;
+  editable_by_user?: boolean;
   attachments?: string[];
   created_at: Date;
   updated_at: Date;
@@ -63,7 +64,7 @@ const serviceRequestSchema = new Schema<IServiceRequest>(
     location: { type: String, required: true },
     status: {
       type: String,
-      enum: ['raised', 'assigned', 'in_progress', 'completed', 'closed'],
+      enum: ['raised', 'assigned', 'in_progress', 'completed', 'closed', 'clarification'],
       default: 'raised',
       index: true,
     },
@@ -73,6 +74,7 @@ const serviceRequestSchema = new Schema<IServiceRequest>(
       default: 'medium',
     },
     assigned_to: { type: String, index: true },
+    editable_by_user: { type: Boolean, default: false },
     attachments: [String],
     completed_at: Date,
   },
@@ -229,3 +231,52 @@ const departmentSchema = new Schema<IDepartment>(
 );
 
 export const Department = mongoose.model<IDepartment>('Department', departmentSchema);
+
+// Change Request Schema - when a user requests changes to a request
+export interface IChangeRequest extends Document {
+  id: string;
+  request_id: string;
+  user_id: string;
+  message: string;
+  status: 'pending' | 'approved' | 'rejected';
+  admin_response?: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
+const changeRequestSchema = new Schema<IChangeRequest>(
+  {
+    id: { type: String, required: true, unique: true, index: true },
+    request_id: { type: String, required: true, index: true },
+    user_id: { type: String, required: true, index: true },
+    message: { type: String, required: true },
+    status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
+    admin_response: String,
+  },
+  { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
+);
+
+export const ChangeRequest = mongoose.model<IChangeRequest>('ChangeRequest', changeRequestSchema);
+
+// Conversation History Schema - store chatbot messages per user for context
+export interface IConversationMessage extends Document {
+  user_id: string;
+  role: 'user' | 'assistant';
+  message: string;
+  created_at: Date;
+}
+
+const conversationMessageSchema = new Schema<IConversationMessage>(
+  {
+    user_id: { type: String, required: true, index: true },
+    role: { type: String, enum: ['user', 'assistant'], required: true },
+    message: { type: String, required: true },
+  },
+  { timestamps: { createdAt: 'created_at' } }
+);
+
+// Index to efficiently retrieve conversation history for a user, sorted by time
+conversationMessageSchema.index({ user_id: 1, created_at: -1 });
+
+export const ConversationMessage = mongoose.model<IConversationMessage>('ConversationMessage', conversationMessageSchema);
+

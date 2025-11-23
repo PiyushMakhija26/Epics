@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -14,11 +14,21 @@ const DEPARTMENTS = ['Electricity', 'Water', 'Agriculture', 'Law', 'Medical', 'S
 
 export default function SignupPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const roleParam = searchParams.get('role');
-  
+
   const [step, setStep] = useState(1);
-  const [role, setRole] = useState<'user' | 'admin' | null>(roleParam === 'admin' ? 'admin' : roleParam === 'user' ? 'user' : null);
+  const [role, setRole] = useState<'user' | 'admin' | null>(null);
+
+  // Read role from URL on client-side to avoid useSearchParams SSR issues
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+      const roleParam = params.get('role');
+      setRole(roleParam === 'admin' ? 'admin' : roleParam === 'user' ? 'user' : null);
+      if (roleParam) setStep(2);
+    } catch (err) {
+      // ignore
+    }
+  }, []);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
