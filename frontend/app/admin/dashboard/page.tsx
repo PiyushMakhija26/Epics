@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import AlarmPanel from '@/components/alarm-panel';
 
 const MOCK_REQUESTS = [
   { id: 1, title: 'Pothole on Main Street', status: 'raised', date: '2024-11-15' },
@@ -12,12 +13,18 @@ const MOCK_REQUESTS = [
 ];
 
 export default function AdminDashboard() {
+  const [token, setToken] = useState<string | null>(null);
   const stats = {
     total: MOCK_REQUESTS.length,
     raised: MOCK_REQUESTS.filter(r => r.status === 'raised').length,
     inProgress: MOCK_REQUESTS.filter(r => r.status === 'in_progress').length,
     completed: MOCK_REQUESTS.filter(r => r.status === 'completed').length,
   };
+
+  useEffect(() => {
+    const stored = localStorage.getItem('token');
+    setToken(stored);
+  }, []);
 
   const getStatusColor = (status: string) => {
     switch(status) {
@@ -74,7 +81,7 @@ export default function AdminDashboard() {
       {/* Quick Actions */}
       <div className="grid md:grid-cols-3 gap-4">
         <Link href="/admin/raised-requests">
-          <Card className="cursor-pointer hover:border-blue-300 hover:shadow-md transition border-gray-200">
+          <Card className="cursor-pointer card-hover border-gray-200">
             <CardHeader>
               <CardTitle className="text-gray-900">View Raised Requests</CardTitle>
               <CardDescription>See all new requests</CardDescription>
@@ -82,7 +89,7 @@ export default function AdminDashboard() {
           </Card>
         </Link>
         <Link href="/admin/update-status">
-          <Card className="cursor-pointer hover:border-blue-300 hover:shadow-md transition border-gray-200">
+          <Card className="cursor-pointer card-hover border-gray-200">
             <CardHeader>
               <CardTitle className="text-gray-900">Update Request Status</CardTitle>
               <CardDescription>Manage request progress</CardDescription>
@@ -90,7 +97,7 @@ export default function AdminDashboard() {
           </Card>
         </Link>
         <Link href="/admin/allocate-work">
-          <Card className="cursor-pointer hover:border-blue-300 hover:shadow-md transition border-gray-200">
+          <Card className="cursor-pointer card-hover border-gray-200">
             <CardHeader>
               <CardTitle className="text-gray-900">Allocate Work</CardTitle>
               <CardDescription>Assign tasks to team</CardDescription>
@@ -98,6 +105,9 @@ export default function AdminDashboard() {
           </Card>
         </Link>
       </div>
+
+      {/* Alarm Panel */}
+      {token && <AlarmPanel token={token} />}
 
       {/* Recent Requests */}
       <Card className="border-gray-200">
@@ -110,7 +120,7 @@ export default function AdminDashboard() {
           ) : (
             <div className="space-y-3">
               {MOCK_REQUESTS.map((request) => (
-                <div key={request.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50">
+                <div key={request.id} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover-darken smooth-transition">
                   <div className="flex-1">
                     <p className="font-semibold text-gray-900">{request.title}</p>
                     <p className="text-sm text-gray-600">{request.date}</p>

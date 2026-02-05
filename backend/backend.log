@@ -1,0 +1,7 @@
+
+> civicserve-backend@1.0.0 start
+> node dist/server.js
+
+CivicServe Backend Server running on port 3001
+Environment: development
+MongoDB connected successfully

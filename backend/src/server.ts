@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { connectDB } from './db/mongodb';
+import path from 'path';
 
 // Load env BEFORE importing modules that read process.env at import time
 dotenv.config();
@@ -19,6 +20,7 @@ const requestsRoutes = require('./routes/requests').default;
 const adminRoutes = require('./routes/admin').default;
 const chatbotRoutes = require('./routes/chatbot').default;
 const locationsRoutes = require('./routes/locations').default;
+const notificationsRoutes = require('./routes/notifications').default;
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -29,6 +31,8 @@ app.use(cors({
   credentials: true,
 }));
 app.use(express.json());
+// Serve uploaded files
+app.use('/uploads', express.static(path.join(__dirname, '../../uploads')));
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -36,6 +40,7 @@ app.use('/api/requests', requestsRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/chatbot', chatbotRoutes);
 app.use('/api/locations', locationsRoutes);
+app.use('/api/notifications', notificationsRoutes);
 
 // Health check
 app.get('/health', (req, res) => {

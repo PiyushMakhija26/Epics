@@ -4,11 +4,12 @@ import { sendStatusUpdateEmail } from '../utils/email';
 import { adminWorkAssignmentService } from '../services/adminWorkAssignment';
 import { ServiceRequest, StatusHistory, RequestRating, Profile, ChangeRequest } from '../db/models';
 import { v4 as uuidv4 } from 'uuid';
+import { upload } from '../middleware/upload';
 
 const router = Router();
 
 // Create a new service request
-router.post('/', authMiddleware, async (req: AuthRequest, res: Response): Promise<void> => {
+router.post('/', authMiddleware, upload.array('attachments', 5), async (req: AuthRequest, res: Response): Promise<void> => {
   try {
     const { title, description, category, department, priority } = req.body;
     const userId = req.user?.sub;
@@ -18,15 +19,25 @@ router.post('/', authMiddleware, async (req: AuthRequest, res: Response): Promis
       return;
     }
 
+    const attachments: string[] = [];
+    const files = (req as any).files as any[] | undefined;
+    if (files && files.length > 0) {
+      for (const f of files) {
+        // Public URL served from /uploads
+        attachments.push(`/uploads/${f.filename}`);
+      }
+    }
+
     const newRequest = await ServiceRequest.create({
       id: uuidv4(),
       user_id: userId,
       title,
-      description,
-      category,
-      location: department,
+      description: description?.slice(0, 150) || '',
+      category: category || 'general',
+      location: department || 'unknown',
       priority: priority || 'medium',
       status: 'raised',
+      attachments,
     });
 
     res.status(201).json(newRequest);

@@ -280,3 +280,26 @@ conversationMessageSchema.index({ user_id: 1, created_at: -1 });
 
 export const ConversationMessage = mongoose.model<IConversationMessage>('ConversationMessage', conversationMessageSchema);
 
+// Notification Schema
+export interface INotification extends Document {
+  user_id?: string; // optional for broadcast
+  title: string;
+  message: string;
+  type: 'info' | 'alarm' | 'status' | 'system';
+  read?: boolean;
+  created_at: Date;
+}
+
+const notificationSchema = new Schema<INotification>(
+  {
+    user_id: { type: String, index: true },
+    title: { type: String, required: true },
+    message: { type: String, required: true },
+    type: { type: String, enum: ['info', 'alarm', 'status', 'system'], default: 'info' },
+    read: { type: Boolean, default: false },
+  },
+  { timestamps: { createdAt: 'created_at' } }
+);
+
+export const Notification = mongoose.model<INotification>('Notification', notificationSchema);
+

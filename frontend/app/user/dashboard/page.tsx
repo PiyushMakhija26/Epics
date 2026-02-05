@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -67,7 +67,8 @@ export default function UserDashboard() {
   };
 
   return (
-    <div className="space-y-6">
+    <>
+      <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
         <p className="text-gray-600 mt-2">Welcome back! Here's your request overview.</p>
@@ -156,6 +157,14 @@ export default function UserDashboard() {
           )}
         </CardContent>
       </Card>
-    </div>
+      </div>
+      {/* Chatbot available inside portal */}
+      <div style={{ position: 'fixed', bottom: 16, right: 16, zIndex: 100 }}>
+        {/* @ts-ignore */}
+        <Suspense fallback={null}>
+          {typeof window !== 'undefined' && require('@/components/chatbot').default()}
+        </Suspense>
+      </div>
+    </>
   );
 }

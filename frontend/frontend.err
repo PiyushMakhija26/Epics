@@ -1,0 +1,11 @@
+(node:13452) [DEP0060] DeprecationWarning: The `util._extend` API is deprecated. Please use Object.assign() instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+Failed to proxy http://localhost:3001/api/auth/login AggregateError: 
+    at ignore-listed frames {
+  code: 'ECONNREFUSED'
+}
+AggregateError: 
+    at ignore-listed frames {
+  code: 'ECONNREFUSED'
+}
+^C^C
